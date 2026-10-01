@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { showTost, toggleActiveClass } from './helpers';
 import { openModal } from './modal';
 import {
@@ -7,6 +8,7 @@ import {
   getProductsByCategory,
   searchProducts,
 } from './products-api';
+import { refs } from './refs';
 import {
   clearProductList,
   hideNotFound,
@@ -14,10 +16,24 @@ import {
   renderProductInModal,
   renderProducts,
   showNotFound,
+  updateCounters,
 } from './render-function';
+import {
+  addToCart,
+  addToWishlist,
+  getCartItems,
+  getWishlistItems,
+  isInCart,
+  isInWishlist,
+  removeFromCart,
+  removeFromWishlist,
+} from './storage';
+
+let currentProductId = null;
 
 export async function initHomePage() {
   try {
+    updateCounters(getWishlistItems(), getCartItems());
     const categories = await getCategories();
     renderCategories(categories);
 
@@ -69,6 +85,7 @@ export async function handleProductClick(event) {
   }
 
   const productId = Number(productItem.dataset.id);
+  currentProductId = productId;
   const product = await getProductById(productId);
 
   renderProductInModal(product);
@@ -99,4 +116,56 @@ export async function handleSearchSubmit(event) {
     showTost(`Ошибка получения продуктов по поиску ${error}`, 'error');
     console.log(`Ошибка получения продуктов по поиску ${error}`);
   }
+}
+
+export async function handleSearchClearBtn() {
+  refs.searchFrom.reset();
+
+  clearProductList();
+
+  try {
+    const { products } = await getProducts();
+    await renderProducts(products);
+
+    hideNotFound();
+  } catch (err) {
+    showTost(`fetching products ${err}`, 'error');
+    console.log('Error fetching products', err);
+
+    showNotFound();
+  }
+}
+
+export function handleAddToWishListBtn(event) {
+  if (!currentProductId) {
+    return;
+  }
+
+  if (isInWishlist(currentProductId)) {
+    removeFromWishlist(currentProductId);
+    refs.addToWishListBtn.textContent = 'Add to Wishlist';
+    showTost('Product has been removed from wishlist', 'info');
+  } else {
+    addToWishlist(currentProductId);
+    refs.addToWishListBtn.textContent = 'Remove from Wishlist';
+    showTost('Product has been added to wishlist', 'success');
+  }
+  updateCounters(getWishlistItems(), getCartItems());
+}
+
+export function handleAddToCartBtnClick(event) {
+  if (!currentProductId) {
+    return;
+  }
+
+  if (isInCart(currentProductId)) {
+    removeFromCart(currentProductId);
+    refs.addToCartBtn.textContent = 'Add to Cart';
+    showTost('Product has been removed from cart', 'info');
+  } else {
+    addToCart(currentProductId);
+    refs.addToCartBtn.textContent = 'Remove from cart';
+    showTost('Product has been added to cart', 'success');
+  }
+  updateCounters(getWishlistItems(), getCartItems());
 }
