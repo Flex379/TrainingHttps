@@ -86,3 +86,28 @@ export function updateCounters(wishListItems, cartItems) {
   refs.wishListCount.textContent = wishListItems.length;
   refs.cartCount.textContent = cartItems.length;
 }
+
+export function showLoadMoreBtn() {
+  refs.loadMoreBtn.classList.remove('is-hidden');
+}
+
+export function hideLoadMoreBtn() {
+  refs.loadMoreBtn.classList.add('is-hidden');
+  refs.loadMoreBtn.classList.remove('is-loading');
+}
+
+export function showLoadMoreBtnLoading() {
+  refs.loadMoreBtn.classList.add('is-loading');
+}
+export function hideLoadMoreBtnLoading() {
+  refs.loadMoreBtn.classList.remove('is-loading');
+}
+
+export function updateCartSummary(products) {
+  refs.cartValue.textContent = products.length;
+
+  const totalPrice = products.reduce((sum, product) => {
+    return sum + product.price;
+  }, 0);
+  refs.cartPrice.textContent = totalPrice.toFixed(2) + '$';
+}

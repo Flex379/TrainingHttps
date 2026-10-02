@@ -1,5 +1,12 @@
 import axios from 'axios';
-import { showTost, toggleActiveClass } from './helpers';
+import {
+  loadCartProducts,
+  loadWishlistProducts,
+  showTost,
+  toggleActiveClass,
+  toggleTheme,
+  updateLoadMoreBtn,
+} from './helpers';
 import { openModal } from './modal';
 import {
   getCategories,
@@ -11,37 +18,65 @@ import {
 import { refs } from './refs';
 import {
   clearProductList,
+  hideLoadMoreBtn,
   hideNotFound,
   renderCategories,
   renderProductInModal,
   renderProducts,
+  showLoadMoreBtn,
+  showLoadMoreBtnLoading,
   showNotFound,
+  updateCartSummary,
   updateCounters,
 } from './render-function';
 import {
   addToCart,
   addToWishlist,
   getCartItems,
+  getTheme,
   getWishlistItems,
   isInCart,
   isInWishlist,
   removeFromCart,
+  removeFromStorage,
   removeFromWishlist,
+  saveTheme,
 } from './storage';
+import { STORAGE_KEYS } from './constants';
 
 let currentProductId = null;
+let currentPage = 1;
 
 export async function initHomePage() {
+  const userTheme = getTheme();
+  toggleTheme(userTheme);
   try {
     updateCounters(getWishlistItems(), getCartItems());
     const categories = await getCategories();
     renderCategories(categories);
 
-    const { products } = await getProducts();
+    const { products, total } = await getProducts(currentPage);
     renderProducts(products);
+
+    showLoadMoreBtn();
+    updateLoadMoreBtn(total, currentPage);
   } catch (err) {
     console.log(`Ошибка инициализации странички Home ${err}`);
   }
+}
+
+export async function initWishlistPage() {
+  const userTheme = getTheme();
+  toggleTheme(userTheme);
+  updateCounters(getWishlistItems(), getCartItems());
+  await loadWishlistProducts();
+}
+
+export async function initCartPage() {
+  const userTheme = getTheme();
+  toggleTheme(userTheme);
+  updateCounters(getWishlistItems(), getCartItems());
+  await loadCartProducts();
 }
 
 export async function handleCategoryClick(event) {
@@ -52,6 +87,7 @@ export async function handleCategoryClick(event) {
   }
 
   clearProductList();
+  hideLoadMoreBtn();
 
   try {
     const category = target.textContent;
@@ -62,7 +98,9 @@ export async function handleCategoryClick(event) {
     let productsData;
 
     if (category === 'All') {
-      productsData = await getProducts();
+      currentPage = 1;
+      productsData = await getProducts(currentPage);
+      showLoadMoreBtn();
     } else {
       productsData = await getProductsByCategory(category);
     }
@@ -103,6 +141,7 @@ export async function handleSearchSubmit(event) {
   }
 
   clearProductList();
+  hideLoadMoreBtn();
 
   try {
     const { products } = await searchProducts(query);
@@ -120,14 +159,22 @@ export async function handleSearchSubmit(event) {
 
 export async function handleSearchClearBtn() {
   refs.searchFrom.reset();
-
   clearProductList();
+  currentPage = 1;
 
   try {
-    const { products } = await getProducts();
-    await renderProducts(products);
+    const { products, total } = await getProducts(currentPage);
+    renderProducts(products);
 
     hideNotFound();
+    showLoadMoreBtn();
+    updateLoadMoreBtn(total, currentPage);
+
+    const categorryEl = document.querySelector('.categories__btn');
+
+    const allCategoriesBtn = document.querySelectorAll('.categories__btn');
+
+    toggleActiveClass(allCategoriesBtn, categorryEl, 'categories__btn--active');
   } catch (err) {
     showTost(`fetching products ${err}`, 'error');
     console.log('Error fetching products', err);
@@ -136,7 +183,7 @@ export async function handleSearchClearBtn() {
   }
 }
 
-export function handleAddToWishListBtn(event) {
+export function handleAddToWishListBtn() {
   if (!currentProductId) {
     return;
   }
@@ -153,7 +200,7 @@ export function handleAddToWishListBtn(event) {
   updateCounters(getWishlistItems(), getCartItems());
 }
 
-export function handleAddToCartBtnClick(event) {
+export function handleAddToCartBtnClick() {
   if (!currentProductId) {
     return;
   }
@@ -168,4 +215,61 @@ export function handleAddToCartBtnClick(event) {
     showTost('Product has been added to cart', 'success');
   }
   updateCounters(getWishlistItems(), getCartItems());
+}
+
+export async function handleLoadMoreBtnClick() {
+  currentPage += 1;
+  showLoadMoreBtnLoading();
+
+  try {
+    const { products, total } = await getProducts(currentPage);
+    renderProducts(products);
+    updateLoadMoreBtn(total, currentPage);
+  } catch (err) {
+    showTost(`Ошибка в нажатии в loadMoreBtn ${err}`, 'error');
+    console.log('Ошибка в нажатии в loadMoreBtn', err);
+  }
+}
+
+export function handleBuyProductsClick() {
+  const cartItems = getCartItems();
+
+  if (cartItems.length === 0) {
+    showTost('Your cart is empty', 'warning');
+    return;
+  }
+
+  showTost('Thank for your purchase !', 'success');
+
+  removeFromStorage(STORAGE_KEYS.CART);
+
+  updateCounters(getWishlistItems(), []);
+
+  updateCartSummary([]);
+
+  window.location.reload();
+}
+
+export function handleScrollTop() {
+  if (window.scrollY > 400) {
+    refs.scrollToTopBtn.classList.add('scroll-top-btn--visible');
+  } else {
+    refs.scrollToTopBtn.classList.remove('scroll-top-btn--visible');
+  }
+}
+
+export function handleScrollToTopBtnClick() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
+}
+
+export function handleToggleThemeBtnClick() {
+  const currentTheme = document.body.dataset.theme || 'light';
+
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+  toggleTheme(newTheme);
+  saveTheme(newTheme);
 }

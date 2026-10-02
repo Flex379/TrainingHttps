@@ -69,3 +69,11 @@ export function removeFromCart(id) {
 
   saveToStorage(STORAGE_KEYS.CART, updatedList);
 }
+
+export function getTheme() {
+  return getFromStorage(STORAGE_KEYS.THEME) || 'light';
+}
+
+export function saveTheme(theme) {
+  saveToStorage(STORAGE_KEYS.THEME, theme);
+}

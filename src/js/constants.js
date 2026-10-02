@@ -12,3 +12,5 @@ export const STORAGE_KEYS = {
   CART: 'cart',
   THEME: 'theme',
 };
+
+export const ITEMS_PER_PAGE = 12;
