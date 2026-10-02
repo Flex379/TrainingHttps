@@ -1,0 +1,2 @@
+import{i as e,r as t,h as d,l as n,a,b as i,c as s,d as l,e as o}from"./assets/handlers-ButNgnFG.js";import"./assets/vendor-Cbhu4xvy.js";document.addEventListener("DOMContentLoaded",e);t.productsList.addEventListener("click",d);t.addToWishListBtn.addEventListener("click",async()=>{o(),await n()});t.addToCartBtn.addEventListener("click",a);window.addEventListener("scroll",i);t.scrollToTopBtn.addEventListener("click",s);t.toggleThemeBtn.addEventListener("click",l);
+//# sourceMappingURL=wishlist.js.map

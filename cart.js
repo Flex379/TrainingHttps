@@ -1,0 +1,2 @@
+import{n as e,r as t,h as d,e as n,o as a,p as s,b as i,c,d as l,a as o}from"./assets/handlers-ButNgnFG.js";import"./assets/vendor-Cbhu4xvy.js";document.addEventListener("DOMContentLoaded",e);t.productsList.addEventListener("click",d);t.addToWishListBtn.addEventListener("click",n);t.addToCartBtn.addEventListener("click",async()=>{o(),await a()});t.buyProductsBtn.addEventListener("click",s);window.addEventListener("scroll",i);t.scrollToTopBtn.addEventListener("click",c);t.toggleThemeBtn.addEventListener("click",l);
+//# sourceMappingURL=cart.js.map
